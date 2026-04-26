@@ -167,6 +167,27 @@ def upload_file():
         "filename": filename
     })
 
+@app.route("/files", methods=["GET"])
+@token_required
+def get_files():
+    token = request.headers["Authorization"]
+    data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+    user_id = data["user_id"]
+
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM files WHERE user_id=%s", (user_id,))
+    files = cursor.fetchall()
+    cursor.close()
+
+    file_list = []
+    for f in files:
+        file_list.append({
+            "id": f[0],
+            "filename": f[2],
+            "uploaded_at": str(f[3])
+        })
+
+    return jsonify(file_list)
 
 if __name__ == "__main__":
     app.run(debug=True)
