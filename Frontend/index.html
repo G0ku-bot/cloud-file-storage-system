@@ -75,6 +75,7 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
         if (response.ok) {
             // store user
             localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("token", data.token);
 
             // redirect
             window.location.href = "dashboard.html";
