@@ -29,15 +29,18 @@
         </div>
 
         <div class="upload-container">
-            <form>
+            <form id="uploadForm">
 
                 <div class="upload-box">
-                    <input type="file" id="fileInput">
+                    <input type="file" id="fileInput" required>
                     <label for="fileInput">
                         <p>📁 Drag & Drop your file here</p>
                         <span>or click to browse</span>
                     </label>
                 </div>
+
+                <!-- Show selected file -->
+                <p id="fileName"></p>
 
                 <button type="submit" class="upload-btn">Upload</button>
 
@@ -47,6 +50,56 @@
     </div>
 
 </div>
+
+<!-- 🔥 SCRIPT (IMPORTANT) -->
+<script>
+const fileInput = document.getElementById("fileInput");
+const fileNameText = document.getElementById("fileName");
+
+// Show selected file name
+fileInput.addEventListener("change", function() {
+    if (fileInput.files.length > 0) {
+        fileNameText.innerText = "Selected: " + fileInput.files[0].name;
+    }
+});
+
+// Upload logic
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select a file");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const response = await fetch("http://127.0.0.1:5000/upload", {
+            method: "POST",
+            headers: {
+                "Authorization": localStorage.getItem("token")
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("Upload successful ✅");
+        } else {
+            alert(data.message);
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Upload failed ❌");
+    }
+});
+</script>
 
 </body>
 </html>
