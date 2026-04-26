@@ -148,8 +148,22 @@ def upload_file():
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(filepath)
 
+    # 🔐 Get user from token
+    token = request.headers["Authorization"]
+    data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+    user_id = data["user_id"]
+
+    # 💾 Save to DB
+    cursor = mysql.connection.cursor()
+    cursor.execute(
+        "INSERT INTO files (user_id, filename) VALUES (%s, %s)",
+        (user_id, filename)
+    )
+    mysql.connection.commit()
+    cursor.close()
+
     return jsonify({
-        "message": "File uploaded successfully",
+        "message": "File uploaded and saved",
         "filename": filename
     })
 
