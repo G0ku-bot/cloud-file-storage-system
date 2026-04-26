@@ -19,9 +19,9 @@
     <h2>Welcome Back </h2>
     <p>Login to your cloud storage</p>
 
-    <form>
+    <form id="loginForm">
         <div class="input-box">
-            <input type="email" required>
+            <input type="email" id="email" required>
             <label>Email</label>
         </div>
 
@@ -44,6 +44,49 @@ function toggleLoginPassword() {
     let pass = document.getElementById("loginPassword");
     pass.type = pass.type === "password" ? "text" : "password";
 }
+</script>
+<script>
+function toggleLoginPassword() {
+    let pass = document.getElementById("loginPassword");
+    pass.type = pass.type === "password" ? "text" : "password";
+}
+
+// 🔐 LOGIN FUNCTION
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+        const response = await fetch("http://127.0.0.1:5000/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // store user
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            // redirect
+            window.location.href = "dashboard.html";
+        } else {
+            alert(data.message);
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Server error");
+    }
+});
 </script>
 </body>
 </html>
