@@ -16,7 +16,7 @@
             <li><a href="dashboard.html">Dashboard</a></li>
             <li><a href="upload.html">Upload</a></li>
             <li><a href="#">My Files</a></li>
-            <li><a href="index.html">Logout</a></li>
+            <li><a href="index.html" id="logout">Logout</a></li>
         </ul>
     </div>
 
@@ -31,39 +31,107 @@
         <!-- Table -->
         <div class="file-table">
             <table>
-                <tr>
-                    <th>File Name</th>
-                    <th>Size</th>
-                    <th>Date</th>
-                    <th>Action</th>
-                </tr>
-
-                <tr>
-                    <td>project.pdf</td>
-                    <td>2 MB</td>
-                    <td>Apr 15, 2026</td>
-                    <td>
-                        <button class="download">Download</button>
-                        <button class="delete">Delete</button>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>image.png</td>
-                    <td>1.2 MB</td>
-                    <td>Apr 14, 2026</td>
-                    <td>
-                        <button class="download">Download</button>
-                        <button class="delete">Delete</button>
-                    </td>
-                </tr>
-
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="filesTable">
+                </tbody>
             </table>
         </div>
 
     </div>
 
 </div>
+
+<script>
+// 🔒 Redirect if not logged in
+if (!localStorage.getItem("token")) {
+    window.location.href = "index.html";
+}
+
+// 🔽 Load files
+async function loadFiles() {
+    try {
+        const response = await fetch("http://127.0.0.1:5000/files", {
+            headers: {
+                "Authorization": localStorage.getItem("token")
+            }
+        });
+
+        const files = await response.json();
+
+        const table = document.getElementById("filesTable");
+        table.innerHTML = "";
+
+        if (files.length === 0) {
+            table.innerHTML = "<tr><td colspan='3'>No files uploaded</td></tr>";
+            return;
+        }
+
+        files.forEach(file => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${file.filename}</td>
+                <td>${new Date(file.uploaded_at).toLocaleString()}</td>
+                <td>
+                    <button onclick="downloadFile('${file.filename}')">Download</button>
+                    <button onclick="deleteFile(${file.id})">Delete</button>
+                </td>
+            `;
+
+            table.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error(error);
+        alert("Failed to load files");
+    }
+}
+
+loadFiles();
+
+
+// 🔽 Download file
+function downloadFile(filename) {
+    window.open(`http://127.0.0.1:5000/uploads/${filename}`);
+}
+
+
+// ❌ Delete file
+async function deleteFile(id) {
+    if (!confirm("Delete this file?")) return;
+
+    try {
+        const response = await fetch(`http://127.0.0.1:5000/delete/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": localStorage.getItem("token")
+            }
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+        loadFiles();
+
+    } catch (error) {
+        console.error(error);
+        alert("Delete failed");
+    }
+}
+
+
+// 🔓 Logout
+document.getElementById("logout").addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+});
+</script>
 
 </body>
 </html>

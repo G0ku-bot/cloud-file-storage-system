@@ -7,6 +7,7 @@ from flask_mysqldb import MySQL
 import bcrypt
 import os
 from werkzeug.utils import secure_filename
+from flask import send_from_directory
 
 app = Flask(__name__)
 CORS(app)
@@ -167,6 +168,10 @@ def upload_file():
         "filename": filename
     })
 
+@app.route("/uploads/<filename>")
+def get_uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
 @app.route("/files", methods=["GET"])
 @token_required
 def get_files():
@@ -188,6 +193,29 @@ def get_files():
         })
 
     return jsonify(file_list)
+
+@app.route("/delete/<int:file_id>", methods=["DELETE"])
+@token_required
+def delete_file(file_id):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute("SELECT filename FROM files WHERE id=%s", (file_id,))
+    file = cursor.fetchone()
+
+    if not file:
+        return jsonify({"message": "File not found"}), 404
+
+    filename = file[0]
+
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
+    cursor.execute("DELETE FROM files WHERE id=%s", (file_id,))
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({"message": "File deleted successfully"})
 
 if __name__ == "__main__":
     app.run(debug=True)
