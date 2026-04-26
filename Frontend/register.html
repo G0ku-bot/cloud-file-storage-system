@@ -19,14 +19,14 @@
     <h2>Create Account </h2>
     <p>Start storing your files securely</p>
 
-    <form>
+    <form id="registerForm">
         <div class="input-box">
-            <input type="text" required>
+            <input type="text" id="name" required>
             <label>Full Name</label>
         </div>
 
         <div class="input-box">
-            <input type="email" required>
+            <input type="email" id="email" required>
             <label>Email</label>
         </div>
 
@@ -60,6 +60,72 @@ function toggleConfirmPassword() {
     let pass = document.getElementById("confirmPassword");
     pass.type = pass.type === "password" ? "text" : "password";
 }
+</script>
+<script>
+function togglePassword() {
+    let pass = document.getElementById("password");
+    pass.type = pass.type === "password" ? "text" : "password";
+}
+
+function toggleConfirmPassword() {
+    let pass = document.getElementById("confirmPassword");
+    pass.type = pass.type === "password" ? "text" : "password";
+}
+
+// 🔐 REGISTER FUNCTION
+document.getElementById("registerForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const confirmPassword = document.getElementById("confirmPassword").value.trim();
+    const button = document.querySelector("button");
+
+    // validation
+    if (!name || !email || !password || !confirmPassword) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+    }
+
+    button.innerText = "Registering...";
+    button.disabled = true;
+
+    try {
+        const response = await fetch("http://127.0.0.1:5000/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                password: password
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("Registration successful!");
+            window.location.href = "index.html"; // go to login
+        } else {
+            alert(data.message);
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Server error");
+    }
+
+    button.innerText = "Register";
+    button.disabled = false;
+});
 </script>
 </body>
 </html>
