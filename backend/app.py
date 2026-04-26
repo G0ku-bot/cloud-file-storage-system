@@ -5,6 +5,8 @@ from flask_cors import CORS
 from flask import Flask, request, jsonify
 from flask_mysqldb import MySQL
 import bcrypt
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 CORS(app)
@@ -17,6 +19,14 @@ app.config["MYSQL_HOST"] = "localhost"
 app.config["MYSQL_USER"] = "root"
 app.config["MYSQL_PASSWORD"] = "1234"
 app.config["MYSQL_DB"] = "drive_app"
+
+# 📁 Upload config
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# create uploads folder if not exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 mysql = MySQL(app)
 
@@ -37,16 +47,13 @@ def register():
 
     cursor = mysql.connection.cursor()
 
-    # check if email exists
     cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
     if cursor.fetchone():
         cursor.close()
         return jsonify({"message": "Email already exists"}), 400
 
-    # hash password
     hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-    # insert user
     cursor.execute(
         "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
         (name, email, hashed_pw)
@@ -76,7 +83,6 @@ def login():
 
         if bcrypt.checkpw(password.encode("utf-8"), stored_password.encode("utf-8")):
 
-            # 🔐 Generate JWT
             token = jwt.encode({
                 "user_id": user[0],
                 "email": user[2],
@@ -102,7 +108,6 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = None
 
-        # get token from headers
         if "Authorization" in request.headers:
             token = request.headers["Authorization"]
 
@@ -119,11 +124,34 @@ def token_required(f):
     return decorated
 
 
-# 🔒 Protected route (TEST)
+# 🔒 Protected route
 @app.route("/protected", methods=["GET"])
 @token_required
 def protected():
     return jsonify({"message": "You accessed a protected route"})
+
+
+# 📤 FILE UPLOAD ROUTE
+@app.route("/upload", methods=["POST"])
+@token_required
+def upload_file():
+    if "file" not in request.files:
+        return jsonify({"message": "No file part"}), 400
+
+    file = request.files["file"]
+
+    if file.filename == "":
+        return jsonify({"message": "No selected file"}), 400
+
+    filename = secure_filename(file.filename)
+
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    file.save(filepath)
+
+    return jsonify({
+        "message": "File uploaded successfully",
+        "filename": filename
+    })
 
 
 if __name__ == "__main__":
