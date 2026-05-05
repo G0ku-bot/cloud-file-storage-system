@@ -1,12 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Login - Cloud Storage</title>
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+
+
 </head>
 <body class="auth-page">
 
@@ -16,29 +20,33 @@
 </div>
 
 <div class="login-box">
-    <h2>Welcome Back </h2>
+    <h2>Welcome Back</h2>
     <p>Login to your cloud storage</p>
 
-    <form id="loginForm">
-        <div class="input-box">
-            <input type="email" id="email" required>
-            <label>Email</label>
-        </div>
 
-       <div class="input-box">
-    <input type="password" id="loginPassword" required>
-    <label>Password</label>
-    <span class="toggle" onclick="toggleLoginPassword()">👁</span>
+<form id="loginForm">
+    <div class="input-box">
+        <input type="email" id="email" required placeholder=" ">
+        <label>Email</label>
+    </div>
+
+    <div class="input-box">
+        <input type="password" id="loginPassword" required placeholder=" ">
+        <label>Password</label>
+        <span class="toggle" onclick="toggleLoginPassword()">👁</span>
+    </div>
+
+    <button type="submit">Login</button>
+
+    <p class="signup-text">
+        Dont have an account? <a href="register.html">Register</a>
+    </p>
+</form>
+
+
 </div>
 
-        <button type="submit">Login</button>
-
-        <p class="signup-text">
-            Don’t have an account? <a href="register.html">Register</a>
-        </p>
-    </form>
-</div>
-
+<div id="messageBox" class="message-box"></div>
 
 <script>
 function toggleLoginPassword() {
@@ -46,7 +54,17 @@ function toggleLoginPassword() {
     pass.type = pass.type === "password" ? "text" : "password";
 }
 
-// 🔐 LOGIN FUNCTION
+function showMessage(text, type = "success") {
+    const box = document.getElementById("messageBox");
+
+    box.innerText = text;
+    box.className = "message-box show " + type;
+
+    setTimeout(() => {
+        box.classList.remove("show");
+    }, 2500);
+}
+
 document.getElementById("loginForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
@@ -59,30 +77,31 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                email: email,
-                password: password
-            })
+            body: JSON.stringify({ email, password })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            // store user
             localStorage.setItem("user", JSON.stringify(data.user));
             localStorage.setItem("token", data.token);
 
-            // redirect
-            window.location.href = "dashboard.html";
+            showMessage("Login successful ✅");
+
+            setTimeout(() => {
+                window.location.href = "dashboard.html";
+            }, 1000);
+
         } else {
-            alert(data.message);
+            showMessage(data.message || "Login failed ❌", "error");
         }
 
     } catch (error) {
         console.error(error);
-        alert("Server error");
+        showMessage("Server error ❌", "error");
     }
 });
 </script>
+
 </body>
 </html>

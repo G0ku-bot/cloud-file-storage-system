@@ -74,6 +74,10 @@
 
 </div>
 
+<!-- ✅ Message Box -->
+
+<div id="messageBox" class="message-box"></div>
+
 <script>
 const user = JSON.parse(localStorage.getItem("user"));
 const token = localStorage.getItem("token");
@@ -91,6 +95,18 @@ document.getElementById("logout").addEventListener("click", () => {
     localStorage.removeItem("token");
     window.location.href = "index.html";
 });
+
+// ✅ Message function
+function showMessage(text, type = "success") {
+    const box = document.getElementById("messageBox");
+
+    box.innerText = text;
+    box.className = "message-box show " + type;
+
+    setTimeout(() => {
+        box.classList.remove("show");
+    }, 2500);
+}
 
 // Load stats
 async function loadStats() {
@@ -124,34 +140,35 @@ async function loadStats() {
         document.getElementById("uploadsToday").innerText = todayCount;
 
     } catch (error) {
-        console.error("Error loading stats:", error);
+        showMessage("Error loading data ❌", "error");
     }
 }
 
 // Storage info
 async function showStorage() {
-    const res = await fetch("http://127.0.0.1:5000/files", {
-        headers: {
-            "Authorization": token
-        }
-    });
+    try {
+        const res = await fetch("http://127.0.0.1:5000/files", {
+            headers: {
+                "Authorization": token
+            }
+        });
 
-    const files = await res.json();
+        const files = await res.json();
 
-    let totalSize = 0;
-    files.forEach(file => {
-        totalSize += Number(file.size) || 0;
-    });
+        let totalSize = 0;
+        files.forEach(file => {
+            totalSize += Number(file.size) || 0;
+        });
 
-    const usedMB = (totalSize / (1024 * 1024)).toFixed(2);
-    const maxStorageMB = 100;
-    const percent = ((usedMB / maxStorageMB) * 100).toFixed(1);
+        const usedMB = (totalSize / (1024 * 1024)).toFixed(2);
+        const maxStorageMB = 100;
+        const percent = ((usedMB / maxStorageMB) * 100).toFixed(1);
 
-    alert(
-        "Storage Used: " + usedMB + " MB\n" +
-        "Limit: " + maxStorageMB + " MB\n" +
-        "Usage: " + percent + "%"
-    );
+        showMessage(`📦 ${usedMB} MB used • ${percent}% of ${maxStorageMB} MB`);
+
+    } catch (error) {
+        showMessage("Error fetching storage info ❌", "error");
+    }
 }
 
 loadStats();

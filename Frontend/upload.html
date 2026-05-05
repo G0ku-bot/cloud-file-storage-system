@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,55 +10,81 @@
 
 <div class="dashboard">
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>☁ Cloud</h2>
-        <ul>
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="#">Upload</a></li>
-            <li><a href="files.html">My Files</a></li>
-            <li><a href="index.html">Logout</a></li>
-        </ul>
+```
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>☁ Cloud</h2>
+    <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="#">Upload</a></li>
+        <li><a href="files.html">My Files</a></li>
+        <li><a href="#" id="logout">Logout</a></li>
+    </ul>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+    <div class="top-bar">
+        <h1>Upload File</h1>
+        <p>Select and upload your files securely</p>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
+    <div class="upload-container">
+        <form id="uploadForm">
 
-        <div class="top-bar">
-            <h1>Upload File </h1>
-            <p>Select and upload your files securely</p>
-        </div>
+            <div class="upload-box">
+                <input type="file" id="fileInput" required>
+                <label for="fileInput">
+                    <p>📁 Drag & Drop your file here</p>
+                    <span>or click to browse</span>
+                </label>
+            </div>
 
-        <div class="upload-container">
-            <form id="uploadForm">
+            <p id="fileName"></p>
 
-                <div class="upload-box">
-                    <input type="file" id="fileInput" required>
-                    <label for="fileInput">
-                        <p>📁 Drag & Drop your file here</p>
-                        <span>or click to browse</span>
-                    </label>
-                </div>
+            <button type="submit" id="uploadBtn" class="upload-btn">Upload</button>
 
-                <!-- Show selected file -->
-                <p id="fileName"></p>
-
-                <button type="submit" class="upload-btn">Upload</button>
-
-            </form>
-        </div>
-
+        </form>
     </div>
 
 </div>
+```
 
-<!-- 🔥 SCRIPT (IMPORTANT) -->
+</div>
+
+<!-- ✅ Message Box -->
+
+<div id="messageBox" class="message-box"></div>
+
 <script>
-    if (!localStorage.getItem("token")) {
+// 🔒 Protect page
+if (!localStorage.getItem("token")) {
     window.location.href = "index.html";
 }
+
+// Logout
+document.getElementById("logout").addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "index.html";
+});
+
+// ✅ Message system
+function showMessage(text, type = "success") {
+    const box = document.getElementById("messageBox");
+
+    box.innerText = text;
+    box.className = "message-box show " + type;
+
+    setTimeout(() => {
+        box.classList.remove("show");
+    }, 2500);
+}
+
 const fileInput = document.getElementById("fileInput");
 const fileNameText = document.getElementById("fileName");
+const uploadBtn = document.getElementById("uploadBtn");
 
 // Show selected file name
 fileInput.addEventListener("change", function() {
@@ -73,12 +100,16 @@ document.getElementById("uploadForm").addEventListener("submit", async function(
     const file = fileInput.files[0];
 
     if (!file) {
-        alert("Please select a file");
+        showMessage("Please select a file ❌", "error");
         return;
     }
 
     const formData = new FormData();
     formData.append("file", file);
+
+    // 🔥 Loading state
+    uploadBtn.innerText = "Uploading...";
+    uploadBtn.disabled = true;
 
     try {
         const response = await fetch("http://127.0.0.1:5000/upload", {
@@ -92,17 +123,22 @@ document.getElementById("uploadForm").addEventListener("submit", async function(
         const data = await response.json();
 
         if (response.ok) {
-            alert("Upload successful ✅");
+            showMessage("File uploaded successfully ✅");
+
             fileInput.value = "";
             fileNameText.innerText = "";
+
         } else {
-            alert(data.message);
+            showMessage(data.message || "Upload failed ❌", "error");
         }
 
     } catch (error) {
         console.error(error);
-        alert("Upload failed ❌");
+        showMessage("Upload failed ❌", "error");
     }
+
+    uploadBtn.innerText = "Upload";
+    uploadBtn.disabled = false;
 });
 </script>
 

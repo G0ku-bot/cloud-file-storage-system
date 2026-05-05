@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,48 +10,65 @@
 
 <div class="dashboard">
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>☁ Cloud</h2>
-        <ul>
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="upload.html">Upload</a></li>
-            <li><a href="#">My Files</a></li>
-            <li><a href="index.html" id="logout">Logout</a></li>
-        </ul>
+```
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>☁ Cloud</h2>
+    <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="upload.html">Upload</a></li>
+        <li><a href="#">My Files</a></li>
+        <li><a href="#" id="logout">Logout</a></li>
+    </ul>
+</div>
+
+<!-- Main -->
+<div class="main-content">
+
+    <div class="top-bar">
+        <h1>My Files 📂</h1>
+        <p>View, download and manage your files</p>
     </div>
 
-    <!-- Main -->
-    <div class="main-content">
-
-        <div class="top-bar">
-            <h1>My Files 📂</h1>
-            <p>View, download and manage your files</p>
-        </div>
-
-        <!-- Table -->
-        <div class="file-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>File Name</th>
-                        <th>Date</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="filesTable">
-                </tbody>
-            </table>
-        </div>
-
+    <!-- Table -->
+    <div class="file-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="filesTable"></tbody>
+        </table>
     </div>
 
 </div>
+```
+
+</div>
+
+<!-- ✅ Message Box -->
+
+<div id="messageBox" class="message-box"></div>
 
 <script>
-// 🔒 Redirect if not logged in
+// 🔒 Protect page
 if (!localStorage.getItem("token")) {
     window.location.href = "index.html";
+}
+
+// ✅ Message function
+function showMessage(text, type = "success") {
+    const box = document.getElementById("messageBox");
+
+    box.innerText = text;
+    box.className = "message-box show " + type;
+
+    setTimeout(() => {
+        box.classList.remove("show");
+    }, 2500);
 }
 
 // 🔽 Load files
@@ -89,18 +107,16 @@ async function loadFiles() {
 
     } catch (error) {
         console.error(error);
-        alert("Failed to load files");
+        showMessage("Failed to load files ❌", "error");
     }
 }
 
 loadFiles();
 
-
 // 🔽 Download file
 async function downloadFile(filename) {
     try {
         const response = await fetch(`http://127.0.0.1:5000/download/${filename}`, {
-            method: "GET",
             headers: {
                 "Authorization": localStorage.getItem("token")
             }
@@ -109,23 +125,20 @@ async function downloadFile(filename) {
         const data = await response.json();
 
         if (data.url) {
-            window.open(data.url); // opens secure S3 link
+            window.open(data.url);
+            showMessage("Download started ⬇️");
         } else {
-            alert("Failed to get download link");
+            showMessage("Failed to get download link ❌", "error");
         }
 
     } catch (error) {
         console.error(error);
-        alert("Download failed");
+        showMessage("Download failed ❌", "error");
     }
 }
 
-
-
-// ❌ Delete file
+// ❌ Delete file (no confirm popup now)
 async function deleteFile(id) {
-    if (!confirm("Delete this file?")) return;
-
     try {
         const response = await fetch(`http://127.0.0.1:5000/delete/${id}`, {
             method: "DELETE",
@@ -136,15 +149,14 @@ async function deleteFile(id) {
 
         const data = await response.json();
 
-        alert(data.message);
+        showMessage("File deleted 🗑");
         loadFiles();
 
     } catch (error) {
         console.error(error);
-        alert("Delete failed");
+        showMessage("Delete failed ❌", "error");
     }
 }
-
 
 // 🔓 Logout
 document.getElementById("logout").addEventListener("click", () => {
