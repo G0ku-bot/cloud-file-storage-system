@@ -13,8 +13,9 @@ from botocore.client import Config
 from dotenv import load_dotenv
 import urllib.parse
 
+# Load environment variables
+load_dotenv()
 
-load_dotenv(dotenv_path=".env")
 app = Flask(__name__)
 CORS(app)
 
@@ -36,24 +37,20 @@ s3 = boto3.client(
     "s3",
     aws_access_key_id=os.getenv("AWS_ACCESS_KEY"),
     aws_secret_access_key=os.getenv("AWS_SECRET_KEY"),
-    region_name="ap-south-1",
+    region_name=os.getenv("AWS_REGION"),
     config=Config(
         signature_version="s3v4",
         s3={"addressing_style": "virtual"}
     )
 )
 
-print("ACCESS KEY:", os.getenv("AWS_ACCESS_KEY"))
-print("USING ACCESS KEY:", os.getenv("AWS_ACCESS_KEY"))
-print("USING SECRET:", os.getenv("AWS_SECRET_KEY"))
-print("BUCKETS:", s3.list_buckets())
 
 @app.route("/")
 def home():
     return "Backend running 🚀"
 
 
-# 🔐 Register API
+# 🔐 Register
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
@@ -82,7 +79,7 @@ def register():
     return jsonify({"message": "User registered successfully"})
 
 
-# 🔑 Login API
+# 🔑 Login
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
@@ -99,7 +96,6 @@ def login():
         stored_password = user[3]
 
         if bcrypt.checkpw(password.encode("utf-8"), stored_password.encode("utf-8")):
-
             token = jwt.encode({
                 "user_id": user[0],
                 "email": user[2],
@@ -123,16 +119,13 @@ def login():
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
-
-        if "Authorization" in request.headers:
-            token = request.headers["Authorization"]
+        token = request.headers.get("Authorization")
 
         if not token:
             return jsonify({"message": "Token is missing"}), 401
 
         try:
-            data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+            jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
         except:
             return jsonify({"message": "Token is invalid"}), 401
 
@@ -145,33 +138,29 @@ def token_required(f):
 @app.route("/protected", methods=["GET"])
 @token_required
 def protected():
-    return jsonify({"message": "You accessed a protected route"})
+    return jsonify({"message": "Protected route accessed"})
 
 
-# ☁️ FILE UPLOAD (S3)
+# ☁️ Upload file
 @app.route("/upload", methods=["POST"])
 @token_required
 def upload_file():
     if "file" not in request.files:
-        return jsonify({"message": "No file part"}), 400
+        return jsonify({"message": "No file provided"}), 400
 
     file = request.files["file"]
 
     if file.filename == "":
         return jsonify({"message": "No selected file"}), 400
 
-    # ✅ unique filename
     filename = str(uuid.uuid4()) + "_" + secure_filename(file.filename)
 
-    # ☁️ Upload to S3
     s3.upload_fileobj(file, S3_BUCKET, filename)
 
-    # 🔐 Get user from token
-    token = request.headers["Authorization"]
+    token = request.headers.get("Authorization")
     data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
     user_id = data["user_id"]
 
-    # 💾 Save to DB
     cursor = mysql.connection.cursor()
     cursor.execute(
         "INSERT INTO files (user_id, filename) VALUES (%s, %s)",
@@ -180,20 +169,14 @@ def upload_file():
     mysql.connection.commit()
     cursor.close()
 
-    return jsonify({
-        "message": "File uploaded to S3",
-        "filename": filename
-    })
+    return jsonify({"message": "File uploaded", "filename": filename})
 
 
+# 🔐 Secure download
 @app.route("/download/<filename>", methods=["GET"])
 @token_required
-def get_secure_file(filename):
-
-    # ✅ decode filename properly
+def download_file(filename):
     safe_filename = urllib.parse.unquote(filename)
-
-    print("Downloading:", safe_filename)
 
     url = s3.generate_presigned_url(
         "get_object",
@@ -204,15 +187,14 @@ def get_secure_file(filename):
         ExpiresIn=300
     )
 
-    print("Generated URL:", url)
-
     return jsonify({"url": url})
 
-# 📂 GET FILES
+
+# 📂 Get files
 @app.route("/files", methods=["GET"])
 @token_required
 def get_files():
-    token = request.headers["Authorization"]
+    token = request.headers.get("Authorization")
     data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
     user_id = data["user_id"]
 
@@ -221,18 +203,16 @@ def get_files():
     files = cursor.fetchall()
     cursor.close()
 
-    file_list = []
-    for f in files:
-        file_list.append({
+    return jsonify([
+        {
             "id": f[0],
             "filename": f[2],
             "uploaded_at": str(f[3])
-        })
+        } for f in files
+    ])
 
-    return jsonify(file_list)
 
-
-# ❌ DELETE FILE (S3)
+# ❌ Delete file
 @app.route("/delete/<int:file_id>", methods=["DELETE"])
 @token_required
 def delete_file(file_id):
@@ -246,15 +226,13 @@ def delete_file(file_id):
 
     filename = file[0]
 
-    # ☁️ Delete from S3
     s3.delete_object(Bucket=S3_BUCKET, Key=filename)
 
-    # ❌ Delete from DB
     cursor.execute("DELETE FROM files WHERE id=%s", (file_id,))
     mysql.connection.commit()
     cursor.close()
 
-    return jsonify({"message": "File deleted successfully"})
+    return jsonify({"message": "File deleted"})
 
 
 if __name__ == "__main__":
