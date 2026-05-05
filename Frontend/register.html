@@ -5,8 +5,6 @@
     <meta charset="UTF-8">
     <title>Register - Cloud Storage</title>
     <link rel="stylesheet" href="css/style.css">
-
-
 <!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
 
@@ -24,24 +22,25 @@
     <p>Start storing your files securely</p>
 
 <form id="registerForm">
+
     <div class="input-box">
-        <input type="text" id="name" required>
+        <input type="text" id="name" required placeholder=" ">
         <label>Full Name</label>
     </div>
 
     <div class="input-box">
-        <input type="email" id="email" required>
+        <input type="email" id="email" required placeholder=" ">
         <label>Email</label>
     </div>
 
     <div class="input-box">
-        <input type="password" id="password" required>
+        <input type="password" id="password" required placeholder=" ">
         <label>Password</label>
         <span class="toggle" onclick="togglePassword()">👁</span>
     </div>
 
     <div class="input-box">
-        <input type="password" id="confirmPassword" required>
+        <input type="password" id="confirmPassword" required placeholder=" ">
         <label>Confirm Password</label>
         <span class="toggle" onclick="toggleConfirmPassword()">👁</span>
     </div>
@@ -55,23 +54,23 @@
 
 </div>
 
-<!-- ✅ Message Box -->
+<!-- Message Box -->
 
 <div id="messageBox" class="message-box"></div>
 
 <script>
 // Toggle password
 function togglePassword() {
-    let pass = document.getElementById("password");
+    const pass = document.getElementById("password");
     pass.type = pass.type === "password" ? "text" : "password";
 }
 
 function toggleConfirmPassword() {
-    let pass = document.getElementById("confirmPassword");
+    const pass = document.getElementById("confirmPassword");
     pass.type = pass.type === "password" ? "text" : "password";
 }
 
-// ✅ Message system
+// Message system
 function showMessage(text, type = "success") {
     const box = document.getElementById("messageBox");
 
@@ -83,7 +82,7 @@ function showMessage(text, type = "success") {
     }, 2500);
 }
 
-// 🔐 REGISTER FUNCTION
+// Register
 document.getElementById("registerForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
@@ -93,7 +92,7 @@ document.getElementById("registerForm").addEventListener("submit", async functio
     const confirmPassword = document.getElementById("confirmPassword").value.trim();
     const button = document.getElementById("registerBtn");
 
-    // validation
+    // Validation
     if (!name || !email || !password || !confirmPassword) {
         showMessage("Please fill all fields ❌", "error");
         return;
@@ -113,11 +112,7 @@ document.getElementById("registerForm").addEventListener("submit", async functio
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                name: name,
-                email: email,
-                password: password
-            })
+            body: JSON.stringify({ name, email, password })
         });
 
         const data = await response.json();

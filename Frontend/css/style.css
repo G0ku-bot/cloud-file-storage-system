@@ -65,44 +65,55 @@ margin-bottom: 25px;
 font-size: 14px;
 }
 
-/* Inputs */
+/* ================= INPUT FIX ================= */
 .input-box {
 position: relative;
 margin-bottom: 25px;
 }
 
+/* FIXED INPUT */
 .input-box input {
 width: 100%;
-padding: 12px;
+padding: 16px 12px 8px;
 border-radius: 8px;
 border: none;
 outline: none;
 background: rgba(255,255,255,0.2);
 color: white;
+font-size: 14px;
 }
 
+/* FIXED LABEL */
 .input-box label {
 position: absolute;
 left: 12px;
-top: 12px;
+top: 50%;
+transform: translateY(-50%);
 font-size: 14px;
 color: #ddd;
 transition: 0.2s ease;
+pointer-events: none;
 }
 
-/* ✅ FIXED FLOATING LABEL */
+/* FLOAT EFFECT */
 .input-box input:focus + label,
 .input-box input:not(:placeholder-shown) + label {
-top: -10px;
-font-size: 12px;
+top: 6px;
+font-size: 11px;
 color: #fff;
+}
+
+/* Input focus glow */
+.input-box input:focus {
+background: rgba(255,255,255,0.3);
 }
 
 /* Toggle eye */
 .toggle {
 position: absolute;
 right: 10px;
-top: 12px;
+top: 50%;
+transform: translateY(-50%);
 cursor: pointer;
 }
 
@@ -234,157 +245,68 @@ font-weight: 500;
 text-decoration: underline;
 }
 
-/* ================= UPLOAD ================= */
-.upload-container {
-margin-top: 30px;
-}
-
-.upload-box {
-border: 2px dashed rgba(255,255,255,0.4);
-border-radius: 15px;
-padding: 40px;
-text-align: center;
-cursor: pointer;
-background: rgba(255,255,255,0.05);
-}
-
-.upload-box:hover {
-background: rgba(255,255,255,0.12);
-transform: scale(1.02);
-}
-
-.upload-box input {
-display: none;
-}
-
-/* Upload button */
-.upload-btn {
-margin-top: 20px;
-padding: 12px 25px;
-border-radius: 8px;
-background: white;
-color: #333;
-font-weight: 600;
-cursor: pointer;
-}
-
-.upload-btn:hover {
-background: #ddd;
-}
-
-/* ================= FILE TABLE ================= */
-.file-table {
-margin-top: 30px;
-background: rgba(255,255,255,0.05);
-padding: 20px;
-border-radius: 12px;
-backdrop-filter: blur(10px);
-}
-
-table {
-width: 100%;
-border-collapse: collapse;
-color: white;
-}
-
-th, td {
-padding: 15px;
-text-align: left;
-}
-
-th {
-border-bottom: 1px solid rgba(255,255,255,0.2);
-}
-
-tr {
-border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-tr:hover {
-background: rgba(255,255,255,0.08);
-}
-
-/* Buttons */
-.download, .delete {
-background: rgba(255,255,255,0.12);
-color: white;
-border: 1px solid rgba(255,255,255,0.2);
-padding: 8px 14px;
-border-radius: 8px;
-cursor: pointer;
-backdrop-filter: blur(8px);
-}
-
-.download:hover,
-.delete:hover {
-background: rgba(255,255,255,0.25);
-}
-
 /* ================= MESSAGE BOX ================= */
 .message-box {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    background: rgba(0, 0, 0, 0.85);
-    color: #fff;
-    padding: 18px 28px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 500;
-    opacity: 0;
-    z-index: 2000;
-    text-align: center;
-    min-width: 260px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    transition: 0.25s ease;
+position: fixed;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%) scale(0.9);
+background: rgba(0, 0, 0, 0.85);
+color: #fff;
+padding: 18px 28px;
+border-radius: 12px;
+font-size: 16px;
+font-weight: 500;
+opacity: 0;
+z-index: 2000;
+text-align: center;
+min-width: 260px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
 .message-box.show {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+opacity: 1;
+transform: translate(-50%, -50%) scale(1);
 }
 
 .message-box.success {
-    background: #22c55e;
+background: #22c55e;
 }
 
 .message-box.error {
-    background: #ef4444;
+background: #ef4444;
 }
 
-/* Modal background */
+/* ================= MODAL ================= */
 .modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    justify-content: center;
-    align-items: center;
-    z-index: 3000;
+display: none;
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.6);
+justify-content: center;
+align-items: center;
+z-index: 3000;
 }
 
-/* Modal box */
 .modal-content {
-    background: #111827;
-    color: white;
-    padding: 30px;
-    border-radius: 12px;
-    width: 320px;
-    text-align: center;
+background: #111827;
+color: white;
+padding: 30px;
+border-radius: 12px;
+width: 320px;
+text-align: center;
 }
 
-/* Progress bar */
 .progress-bar {
-    margin: 20px 0;
-    height: 10px;
-    background: #374151;
-    border-radius: 10px;
-    overflow: hidden;
+margin: 20px 0;
+height: 10px;
+background: #374151;
+border-radius: 10px;
+overflow: hidden;
 }
 
 #progressFill {
-    height: 100%;
-    background: #22c55e;
-    width: 0%;
+height: 100%;
+background: #22c55e;
+width: 0%;
 }
