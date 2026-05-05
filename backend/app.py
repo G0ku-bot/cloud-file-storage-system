@@ -9,7 +9,12 @@ import bcrypt
 import os
 from werkzeug.utils import secure_filename
 import uuid
+from botocore.client import Config
+from dotenv import load_dotenv
+import urllib.parse
 
+
+load_dotenv(dotenv_path=".env")
 app = Flask(__name__)
 CORS(app)
 
@@ -25,15 +30,23 @@ app.config["MYSQL_DB"] = "drive_app"
 mysql = MySQL(app)
 
 # ☁️ S3 CONFIG
-S3_BUCKET = "cloud-file-storage-12"
+S3_BUCKET = os.getenv("AWS_BUCKET")
 
 s3 = boto3.client(
     "s3",
-    aws_access_key_id="AKIAUDOTYKQF5T4EGTWQ",
-    aws_secret_access_key="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",
-    region_name="ap-south-1"
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_KEY"),
+    region_name="ap-south-1",
+    config=Config(
+        signature_version="s3v4",
+        s3={"addressing_style": "virtual"}
+    )
 )
 
+print("ACCESS KEY:", os.getenv("AWS_ACCESS_KEY"))
+print("USING ACCESS KEY:", os.getenv("AWS_ACCESS_KEY"))
+print("USING SECRET:", os.getenv("AWS_SECRET_KEY"))
+print("BUCKETS:", s3.list_buckets())
 
 @app.route("/")
 def home():
@@ -172,6 +185,28 @@ def upload_file():
         "filename": filename
     })
 
+
+@app.route("/download/<filename>", methods=["GET"])
+@token_required
+def get_secure_file(filename):
+
+    # ✅ decode filename properly
+    safe_filename = urllib.parse.unquote(filename)
+
+    print("Downloading:", safe_filename)
+
+    url = s3.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": S3_BUCKET,
+            "Key": safe_filename
+        },
+        ExpiresIn=300
+    )
+
+    print("Generated URL:", url)
+
+    return jsonify({"url": url})
 
 # 📂 GET FILES
 @app.route("/files", methods=["GET"])

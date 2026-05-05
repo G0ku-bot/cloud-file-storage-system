@@ -97,9 +97,29 @@ loadFiles();
 
 
 // 🔽 Download file
-function downloadFile(filename) {
-    window.open(`http://127.0.0.1:5000/uploads/${filename}`);
+async function downloadFile(filename) {
+    try {
+        const response = await fetch(`http://127.0.0.1:5000/download/${filename}`, {
+            method: "GET",
+            headers: {
+                "Authorization": localStorage.getItem("token")
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.url) {
+            window.open(data.url); // opens secure S3 link
+        } else {
+            alert("Failed to get download link");
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Download failed");
+    }
 }
+
 
 
 // ❌ Delete file
