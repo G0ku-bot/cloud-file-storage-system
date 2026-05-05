@@ -53,6 +53,9 @@
 
 <!-- 🔥 SCRIPT (IMPORTANT) -->
 <script>
+    if (!localStorage.getItem("token")) {
+    window.location.href = "index.html";
+}
 const fileInput = document.getElementById("fileInput");
 const fileNameText = document.getElementById("fileName");
 
@@ -90,6 +93,8 @@ document.getElementById("uploadForm").addEventListener("submit", async function(
 
         if (response.ok) {
             alert("Upload successful ✅");
+            fileInput.value = "";
+            fileNameText.innerText = "";
         } else {
             alert(data.message);
         }

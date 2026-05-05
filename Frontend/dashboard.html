@@ -20,6 +20,7 @@
         </ul>
     </div>
 
+    <!-- Main Content -->
     <div class="main-content">
 
         <div class="top-bar">
@@ -30,17 +31,17 @@
         <!-- Stats -->
         <div class="stats">
             <div class="stat-box">
-                <h3>12</h3>
+                <h3 id="totalFiles">0</h3>
                 <p>Total Files</p>
             </div>
 
             <div class="stat-box">
-                <h3>1.5GB</h3>
+                <h3 id="storageUsed">0 MB</h3>
                 <p>Storage Used</p>
             </div>
 
             <div class="stat-box">
-                <h3>5</h3>
+                <h3 id="uploadsToday">0</h3>
                 <p>Uploads Today</p>
             </div>
         </div>
@@ -70,23 +71,72 @@
 
 </div>
 
-<!-- 🔥 SCRIPT -->
+<!-- SCRIPT -->
 <script>
-    // Get user from localStorage
     const user = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
 
-    // If no user → redirect to login
-    if (!user) {
+    // Protect page
+    if (!user || !token) {
         window.location.href = "index.html";
     } else {
         document.getElementById("welcomeText").innerText = "Welcome " + user.name;
     }
 
     // Logout
-    document.getElementById("logout").addEventListener("click", function () {
+    document.getElementById("logout").addEventListener("click", () => {
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
         window.location.href = "index.html";
     });
+
+   // Load stats
+async function loadStats() {
+    try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://127.0.0.1:5000/files", {
+            headers: {
+                "Authorization": token
+            }
+        });
+
+        const files = await res.json();
+
+        // 🔥 DEBUG (IMPORTANT)
+        console.log("FILES DATA:", files);
+
+        // Total files
+        document.getElementById("totalFiles").innerText = files.length;
+
+        // Storage used
+        let totalSize = 0;
+
+        files.forEach(file => {
+            console.log("FILE SIZE:", file.size); // 🔥 DEBUG EACH FILE
+            totalSize += Number(file.size) || 0;
+        });
+
+        console.log("TOTAL SIZE:", totalSize);
+
+        const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+        document.getElementById("storageUsed").innerText = sizeMB + " MB";
+
+        // Uploads today
+        const today = new Date().toDateString();
+
+        const todayCount = files.filter(file => {
+            return new Date(file.uploaded_at).toDateString() === today;
+        }).length;
+
+        document.getElementById("uploadsToday").innerText = todayCount;
+
+    } catch (error) {
+        console.error("Error loading stats:", error);
+    }
+}
+
+loadStats();
 </script>
 
 </body>

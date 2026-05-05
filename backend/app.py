@@ -155,6 +155,11 @@ def upload_file():
 
     filename = str(uuid.uuid4()) + "_" + secure_filename(file.filename)
 
+    # ✅ get size BEFORE upload
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+
     s3.upload_fileobj(file, S3_BUCKET, filename)
 
     token = request.headers.get("Authorization")
@@ -163,13 +168,18 @@ def upload_file():
 
     cursor = mysql.connection.cursor()
     cursor.execute(
-        "INSERT INTO files (user_id, filename) VALUES (%s, %s)",
-        (user_id, filename)
+        "INSERT INTO files (user_id, filename, size) VALUES (%s, %s, %s)",
+        (user_id, filename, file_size)
     )
+
     mysql.connection.commit()
     cursor.close()
 
-    return jsonify({"message": "File uploaded", "filename": filename})
+    return jsonify({
+        "message": "File uploaded",
+        "filename": filename,
+        "size": file_size
+    })
 
 
 # 🔐 Secure download
@@ -207,7 +217,8 @@ def get_files():
         {
             "id": f[0],
             "filename": f[2],
-            "uploaded_at": str(f[3])
+            "size": f[4],              # ✅ CORRECT
+            "uploaded_at": str(f[3])   # ✅ CORRECT
         } for f in files
     ])
 
