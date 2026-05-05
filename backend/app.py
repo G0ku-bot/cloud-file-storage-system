@@ -1,3 +1,4 @@
+import boto3
 import jwt
 import datetime
 from functools import wraps
@@ -7,7 +8,7 @@ from flask_mysqldb import MySQL
 import bcrypt
 import os
 from werkzeug.utils import secure_filename
-from flask import send_from_directory
+import uuid
 
 app = Flask(__name__)
 CORS(app)
@@ -21,15 +22,17 @@ app.config["MYSQL_USER"] = "root"
 app.config["MYSQL_PASSWORD"] = "1234"
 app.config["MYSQL_DB"] = "drive_app"
 
-# 📁 Upload config
-UPLOAD_FOLDER = "uploads"
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-# create uploads folder if not exists
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
 mysql = MySQL(app)
+
+# ☁️ S3 CONFIG
+S3_BUCKET = "cloud-file-storage-12"
+
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id="AKIAUDOTYKQF5T4EGTWQ",
+    aws_secret_access_key="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",
+    region_name="ap-south-1"
+)
 
 
 @app.route("/")
@@ -132,7 +135,7 @@ def protected():
     return jsonify({"message": "You accessed a protected route"})
 
 
-# 📤 FILE UPLOAD ROUTE
+# ☁️ FILE UPLOAD (S3)
 @app.route("/upload", methods=["POST"])
 @token_required
 def upload_file():
@@ -144,10 +147,11 @@ def upload_file():
     if file.filename == "":
         return jsonify({"message": "No selected file"}), 400
 
-    filename = secure_filename(file.filename)
+    # ✅ unique filename
+    filename = str(uuid.uuid4()) + "_" + secure_filename(file.filename)
 
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(filepath)
+    # ☁️ Upload to S3
+    s3.upload_fileobj(file, S3_BUCKET, filename)
 
     # 🔐 Get user from token
     token = request.headers["Authorization"]
@@ -164,14 +168,12 @@ def upload_file():
     cursor.close()
 
     return jsonify({
-        "message": "File uploaded and saved",
+        "message": "File uploaded to S3",
         "filename": filename
     })
 
-@app.route("/uploads/<filename>")
-def get_uploaded_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
+# 📂 GET FILES
 @app.route("/files", methods=["GET"])
 @token_required
 def get_files():
@@ -194,6 +196,8 @@ def get_files():
 
     return jsonify(file_list)
 
+
+# ❌ DELETE FILE (S3)
 @app.route("/delete/<int:file_id>", methods=["DELETE"])
 @token_required
 def delete_file(file_id):
@@ -207,15 +211,16 @@ def delete_file(file_id):
 
     filename = file[0]
 
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    # ☁️ Delete from S3
+    s3.delete_object(Bucket=S3_BUCKET, Key=filename)
 
+    # ❌ Delete from DB
     cursor.execute("DELETE FROM files WHERE id=%s", (file_id,))
     mysql.connection.commit()
     cursor.close()
 
     return jsonify({"message": "File deleted successfully"})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
