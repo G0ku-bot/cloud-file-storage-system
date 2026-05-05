@@ -406,3 +406,71 @@ tr:hover {
     width: 0%;
     transition: width 0.3s ease;
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+
+/* Layout */
+.dashboard {
+flex-direction: column;
+}
+
+/* Sidebar → top bar */
+.sidebar {
+width: 100%;
+height: auto;
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 15px;
+}
+
+.sidebar ul {
+display: flex;
+gap: 15px;
+}
+
+.sidebar ul li {
+margin: 0;
+}
+
+/* Main content */
+.main-content {
+padding: 20px;
+}
+
+/* Stats stack */
+.stats {
+flex-direction: column;
+}
+
+/* Cards stack */
+.cards {
+grid-template-columns: 1fr;
+}
+
+/* Upload box */
+.upload-box {
+padding: 25px;
+}
+
+/* Table scroll */
+.file-table {
+overflow-x: auto;
+}
+
+table {
+min-width: 500px;
+}
+
+/* Buttons */
+button {
+font-size: 14px;
+}
+
+/* Login/Register box */
+.login-box {
+width: 90%;
+padding: 25px;
+}
+}
