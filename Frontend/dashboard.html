@@ -10,7 +10,6 @@
 
 <div class="dashboard">
 
-```
 <!-- Sidebar -->
 <div class="sidebar">
     <h2>☁ Cloud</h2>
@@ -70,13 +69,30 @@
     </div>
 
 </div>
-```
 
 </div>
 
-<!-- ✅ Message Box -->
+<!-- ✅ MESSAGE BOX -->
 
 <div id="messageBox" class="message-box"></div>
+
+<!-- ✅ STORAGE MODAL -->
+
+<div id="storageModal" class="modal">
+    <div class="modal-content">
+        <h2>Storage Info</h2>
+
+
+    <p id="storageText"></p>
+
+    <div class="progress-bar">
+        <div id="progressFill"></div>
+    </div>
+
+    <button onclick="closeModal()">Close</button>
+</div>
+
+</div>
 
 <script>
 const user = JSON.parse(localStorage.getItem("user"));
@@ -96,7 +112,7 @@ document.getElementById("logout").addEventListener("click", () => {
     window.location.href = "index.html";
 });
 
-// ✅ Message function
+// ✅ CENTER MESSAGE
 function showMessage(text, type = "success") {
     const box = document.getElementById("messageBox");
 
@@ -119,10 +135,8 @@ async function loadStats() {
 
         const files = await res.json();
 
-        // Total files
         document.getElementById("totalFiles").innerText = files.length;
 
-        // Storage used
         let totalSize = 0;
         files.forEach(file => {
             totalSize += Number(file.size) || 0;
@@ -131,7 +145,6 @@ async function loadStats() {
         const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
         document.getElementById("storageUsed").innerText = sizeMB + " MB";
 
-        // Uploads today
         const today = new Date().toDateString();
         const todayCount = files.filter(file => {
             return new Date(file.uploaded_at).toDateString() === today;
@@ -144,7 +157,7 @@ async function loadStats() {
     }
 }
 
-// Storage info
+// ✅ STORAGE MODAL (NEW)
 async function showStorage() {
     try {
         const res = await fetch("http://127.0.0.1:5000/files", {
@@ -164,11 +177,21 @@ async function showStorage() {
         const maxStorageMB = 100;
         const percent = ((usedMB / maxStorageMB) * 100).toFixed(1);
 
-        showMessage(`📦 ${usedMB} MB used • ${percent}% of ${maxStorageMB} MB`);
+        document.getElementById("storageText").innerText =
+            `${usedMB} MB used out of ${maxStorageMB} MB`;
+
+        document.getElementById("progressFill").style.width = percent + "%";
+
+        document.getElementById("storageModal").style.display = "flex";
 
     } catch (error) {
-        showMessage("Error fetching storage info ❌", "error");
+        showMessage("Error fetching storage ❌", "error");
     }
+}
+
+// Close modal
+function closeModal() {
+    document.getElementById("storageModal").style.display = "none";
 }
 
 loadStats();

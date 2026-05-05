@@ -322,27 +322,69 @@ background: rgba(255,255,255,0.25);
 
 /* ================= MESSAGE BOX ================= */
 .message-box {
-position: fixed;
-top: 20px;
-right: 20px;
-background: #333;
-color: #fff;
-padding: 12px 18px;
-border-radius: 8px;
-font-size: 14px;
-opacity: 0;
-z-index: 1000;
-box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 18px 28px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0;
+    z-index: 2000;
+    text-align: center;
+    min-width: 260px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    transition: 0.25s ease;
 }
 
 .message-box.show {
-opacity: 1;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .message-box.success {
-background: #28a745;
+    background: #22c55e;
 }
 
 .message-box.error {
-background: #dc3545;
+    background: #ef4444;
+}
+
+/* Modal background */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+
+/* Modal box */
+.modal-content {
+    background: #111827;
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 320px;
+    text-align: center;
+}
+
+/* Progress bar */
+.progress-bar {
+    margin: 20px 0;
+    height: 10px;
+    background: #374151;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#progressFill {
+    height: 100%;
+    background: #22c55e;
+    width: 0%;
 }
